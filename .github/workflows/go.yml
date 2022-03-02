@@ -28,21 +28,21 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
-     - name: Number of no QUIC conn. established
-       id: noquic
-       run: echo "::set-output name=noquic::$(wc -l < headers/${{ steps.date.outputs.date }}/no-quic-implementation-${{ steps.date.outputs.date }}.txt)"
+      - name: Number of no QUIC conn. established
+        id: noquic
+        run: echo "::set-output name=noquic::$(wc -l < headers/${{ steps.date.outputs.date }}/no-quic-implementation-${{ steps.date.outputs.date }}.txt)"
 
-     - name: Create data
-       run: |
+      - name: Create data
+        run: |
          echo "${{ steps.date.outputs.date }},${{ steps.noquic.outputs.noquic }}" >> data/no-quic-conn.csv
 
-     - name: Commit SS push
-       run: |
-         git config --global user.email "robotcuk@randommail.com"
-         git config --global user.name "robotcuk"
-         git add 'data/*'
-         git add 'headers/*'
-         git commit -m "${{ steps.noquic.outputs.noquic }} : no quic conn. established"
-         git push origin -f main
-      env:
-        GITHUB_TOKEN: ${{ secrets.ROBOTCUK }}
+      - name: Commit SS push
+        run: |
+          git config --global user.email "robotcuk@randommail.com"
+          git config --global user.name "robotcuk"
+          git add 'data/*'
+          git add 'headers/*'
+          git commit -m "${{ steps.noquic.outputs.noquic }} : no quic conn. established"
+          git push origin -f main
+        env:
+         GITHUB_TOKEN: ${{ secrets.ROBOTCUK }}
