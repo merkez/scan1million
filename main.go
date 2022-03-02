@@ -47,7 +47,7 @@ func downloadZip(f zipFile) {
 	io.Copy(out, resp.Body)
 }
 func unzip(src, dst string) error {
-	archive, err := zip.OpenReader(src)
+	archive, err := zip.OpenReader(filepath.Join(dst, src))
 	if err != nil {
 		panic(err)
 	}
@@ -132,16 +132,16 @@ func main() {
 		sites: map[string]string{},
 	}
 	currentTime := time.Now().Format("2006-01-02")
-	file := zipFile{
+	zFile := zipFile{
 		name: fmt.Sprintf("top-1million-sites-%s.csv.zip", currentTime),
 		path: "./data/",
 		url:  top_1_million,
 	}
-	downloadZip(file)
-	if err := unzip(file.path+file.name, file.path); err != nil {
+	downloadZip(zFile)
+	if err := unzip(zFile.name, zFile.path); err != nil {
 		fmt.Printf("Err %v", err)
 	}
-	for _, url := range readURLs("./data/" + strings.TrimSuffix(file.name, ".zip"))[1:200] {
+	for _, url := range readURLs("./data/" + strings.TrimSuffix(zFile.name, ".zip"))[1:200] {
 		urls = append(urls, fmt.Sprintf("https://www.%s", url[1]))
 	}
 	fmt.Printf("Number of urls %v\n", len(urls))
@@ -231,5 +231,5 @@ func main() {
 		noQUICFile.WriteString(fmt.Sprintf("%s , %s \n", k, v))
 	}
 	noQUICFile.Close()
-	os.Remove(file.path + strings.TrimSuffix(file.name, ".zip"))
+	os.Remove(zFile.path + strings.TrimSuffix(zFile.name, ".zip"))
 }
