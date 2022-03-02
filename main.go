@@ -49,7 +49,7 @@ func downloadZip(f zipFile) {
 func unzip(src, dst string) error {
 	archive, err := zip.OpenReader(filepath.Join(dst, src))
 	if err != nil {
-		fmt.Println("Error ZIP OpenReader: %v", err)
+		fmt.Printf("Error ZIP OpenReader: %v\n", err)
 		panic(err)
 	}
 	defer archive.Close()
