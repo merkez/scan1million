@@ -254,5 +254,5 @@ func main() {
 		noQUICFile.WriteString(fmt.Sprintf("%s , %s \n", k, v))
 	}
 	noQUICFile.Close()
-	os.Remove(zFile.path + strings.TrimSuffix(zFile.name, ".zip"))
+	os.Remove("./data/top-1m.csv")
 }
