@@ -54,7 +54,7 @@ func unzip(src, dst string) error {
 	defer archive.Close()
 
 	for _, f := range archive.File {
-		filePath := filepath.Join(dst, strings.TrimPrefix(strings.TrimSuffix(src, ".zip"), "./data/"))
+		filePath := filepath.Join(dst, src)
 		fmt.Println("unzipping file ", filePath)
 
 		if !strings.HasPrefix(filePath, filepath.Clean(dst)+string(os.PathSeparator)) {
@@ -134,7 +134,7 @@ func main() {
 	currentTime := time.Now().Format("2006-01-02")
 	zFile := zipFile{
 		name: fmt.Sprintf("top-1million-sites-%s.csv.zip", currentTime),
-		path: "./data/",
+		path: "data/",
 		url:  top_1_million,
 	}
 	downloadZip(zFile)
