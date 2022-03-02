@@ -46,48 +46,69 @@ func downloadZip(f zipFile) {
 	defer out.Close()
 	io.Copy(out, resp.Body)
 }
-func unzip(src, dst string) error {
-	archive, err := zip.OpenReader(filepath.Join(dst, src))
+
+// taken from: https://stackoverflow.com/questions/20357223/easy-way-to-unzip-file-with-golang
+func unzip(src, dest string) error {
+	r, err := zip.OpenReader(src)
 	if err != nil {
-		fmt.Printf("Error ZIP OpenReader: %v\n", err)
-		panic(err)
+		return err
 	}
-	defer archive.Close()
-
-	for _, f := range archive.File {
-		filePath := filepath.Join(dst, src)
-		fmt.Println("unzipping file ", filePath)
-
-		if !strings.HasPrefix(filePath, filepath.Clean(dst)+string(os.PathSeparator)) {
-			fmt.Println("invalid file path")
+	defer func() {
+		if err := r.Close(); err != nil {
+			panic(err)
 		}
+	}()
+
+	os.MkdirAll(dest, 0755)
+
+	// Closure to address file descriptors issue with all the deferred .Close() methods
+	extractAndWriteFile := func(f *zip.File) error {
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := rc.Close(); err != nil {
+				panic(err)
+			}
+		}()
+
+		path := filepath.Join(dest, f.Name)
+
+		// Check for ZipSlip (Directory traversal)
+		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path: %s", path)
+		}
+
 		if f.FileInfo().IsDir() {
-			fmt.Println("creating directory...")
-			os.MkdirAll(filePath, os.ModePerm)
-			continue
-		}
+			os.MkdirAll(path, f.Mode())
+		} else {
+			os.MkdirAll(filepath.Dir(path), f.Mode())
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				return err
+			}
+			defer func() {
+				if err := f.Close(); err != nil {
+					panic(err)
+				}
+			}()
 
-		if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
-			panic(err)
+			_, err = io.Copy(f, rc)
+			if err != nil {
+				return err
+			}
 		}
-
-		dstFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			panic(err)
-		}
-
-		fileInArchive, err := f.Open()
-		if err != nil {
-			panic(err)
-		}
-
-		if _, err := io.Copy(dstFile, fileInArchive); err != nil {
-			panic(err)
-		}
-
-		dstFile.Close()
-		fileInArchive.Close()
+		return nil
 	}
+
+	for _, f := range r.File {
+		err := extractAndWriteFile(f)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -139,10 +160,11 @@ func main() {
 		url:  top_1_million,
 	}
 	downloadZip(zFile)
-	if err := unzip(zFile.name, zFile.path); err != nil {
+	if err := unzip(zFile.path+zFile.name, zFile.path); err != nil {
 		fmt.Printf("Err %v", err)
 	}
-	for _, url := range readURLs("./data/" + strings.TrimSuffix(zFile.name, ".zip"))[1:] {
+	// file top-1m.csv will be created and deleted as last step
+	for _, url := range readURLs("./data/top-1m.csv")[1:] {
 		urls = append(urls, fmt.Sprintf("https://www.%s", url[1]))
 	}
 	fmt.Printf("Number of urls %v\n", len(urls))
