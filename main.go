@@ -141,7 +141,7 @@ func main() {
 	if err := unzip(zFile.name, zFile.path); err != nil {
 		fmt.Printf("Err %v", err)
 	}
-	for _, url := range readURLs("./data/" + strings.TrimSuffix(zFile.name, ".zip"))[1:200] {
+	for _, url := range readURLs("./data/" + strings.TrimSuffix(zFile.name, ".zip"))[1:] {
 		urls = append(urls, fmt.Sprintf("https://www.%s", url[1]))
 	}
 	fmt.Printf("Number of urls %v\n", len(urls))
