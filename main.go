@@ -141,8 +141,7 @@ func main() {
 	if err := unzip(file.path+file.name, file.path); err != nil {
 		fmt.Printf("Err %v", err)
 	}
-	//fileName := "alexa-top-500-tr-" + currentTime + ".csv"
-	for _, url := range readURLs("./data/" + strings.TrimSuffix(file.name, ".zip"))[1:] {
+	for _, url := range readURLs("./data/" + strings.TrimSuffix(file.name, ".zip"))[1:200] {
 		urls = append(urls, fmt.Sprintf("https://www.%s", url[1]))
 	}
 	fmt.Printf("Number of urls %v\n", len(urls))
@@ -228,7 +227,6 @@ func main() {
 		}(addr)
 	}
 	wg.Wait()
-	noQUICFile.WriteString("site , error")
 	for k, v := range noQUICSites.sites {
 		noQUICFile.WriteString(fmt.Sprintf("%s , %s \n", k, v))
 	}
